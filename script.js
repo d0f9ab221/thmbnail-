@@ -1,81 +1,180 @@
-document.addEventListener('DOMContentLoaded', function() {
-  const videoUrlInput = document.getElementById('videoUrl');
-  const fetchBtn = document.getElementById('fetchBtn');
-  const preview = document.getElementById('preview');
-  const thumbnailImg = document.getElementById('thumbnailImg');
-  const downloadLink = document.getElementById('downloadLink');
-  const errorDiv = document.getElementById('error');
+// YouTube Thumbnail Downloader - Main Script
 
-  function extractVideoID(url) {
-    // Match various YouTube URL formats
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
-      /^([a-zA-Z0-9_-]{11})$/
-    ];
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) return match[1];
+const youtubeUrlInput = document.getElementById('youtubeUrl');
+const extractBtn = document.getElementById('extractBtn');
+const resultSection = document.getElementById('resultSection');
+const thumbnailPreview = document.getElementById('thumbnailPreview');
+const downloadBtn = document.getElementById('downloadBtn');
+const copyBtn = document.getElementById('copyBtn');
+const errorMessage = document.getElementById('errorMessage');
+const successMessage = document.getElementById('successMessage');
+const qualityButtons = document.querySelectorAll('.quality-btn');
+
+let currentVideoId = null;
+let currentThumbnailUrl = null;
+let selectedQuality = 'maxresdefault';
+
+// Extract Video ID from YouTube URL or direct ID
+function extractVideoId(input) {
+    // Remove whitespace
+    input = input.trim();
+
+    // Direct Video ID (11 characters, alphanumeric with - and _)
+    if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+        return input;
     }
+
+    // YouTube.com URL patterns
+    const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = input.match(youtubeRegex);
+
+    if (match && match[1]) {
+        return match[1];
+    }
+
     return null;
-  }
+}
 
-  function getThumbnailURL(videoID, quality = 'maxresdefault') {
-    return `https://img.youtube.com/vi/${videoID}/${quality}.jpg`;
-  }
+// Generate thumbnail URL based on quality
+function getThumbnailUrl(videoId, quality) {
+    return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
+}
 
-  function showThumbnail(videoID) {
-    const thumbnailURL = getThumbnailURL(videoID);
-    thumbnailImg.src = thumbnailURL;
-    preview.classList.remove('hidden');
-    errorDiv.classList.add('hidden');
+// Show error message
+function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('hidden');
+    successMessage.classList.add('hidden');
+    setTimeout(() => {
+        errorMessage.classList.add('hidden');
+    }, 5000);
+}
 
-    // Fetch the image as blob for download (avoids CORS issues)
-    fetch(thumbnailURL)
-      .then(response => {
-        if (!response.ok) throw new Error('Image not available');
-        return response.blob();
-      })
-      .then(blob => {
-        const blobURL = URL.createObjectURL(blob);
-        downloadLink.href = blobURL;
-        downloadLink.download = 'youtube_thumbnail_' + videoID + '.jpg';
-      })
-      .catch(() => {
-        // Fallback: just link to the image (may not download directly)
-        downloadLink.href = thumbnailURL;
-        downloadLink.download = 'thumbnail.jpg';
-      });
-  }
+// Show success message
+function showSuccess(message) {
+    successMessage.textContent = message;
+    successMessage.classList.remove('hidden');
+    errorMessage.classList.add('hidden');
+    setTimeout(() => {
+        successMessage.classList.add('hidden');
+    }, 5000);
+}
 
-  function handleFetch() {
-    const url = videoUrlInput.value.trim();
-    if (!url) {
-      errorDiv.textContent = '❌ कृपया YouTube वीडियो का लिंक डालें।';
-      errorDiv.classList.remove('hidden');
-      preview.classList.add('hidden');
-      return;
+// Hide result section
+function hideResultSection() {
+    resultSection.classList.add('hidden');
+}
+
+// Show result section
+function showResultSection() {
+    resultSection.classList.remove('hidden');
+}
+
+// Update thumbnail preview
+function updateThumbnailPreview() {
+    if (currentVideoId && selectedQuality) {
+        currentThumbnailUrl = getThumbnailUrl(currentVideoId, selectedQuality);
+        
+        // Create a temporary image to check if the quality exists
+        const img = new Image();
+        img.onload = () => {
+            thumbnailPreview.src = currentThumbnailUrl;
+        };
+        img.onerror = () => {
+            // If quality doesn't exist, try a fallback
+            const fallbackUrl = getThumbnailUrl(currentVideoId, 'hqdefault');
+            thumbnailPreview.src = fallbackUrl;
+            currentThumbnailUrl = fallbackUrl;
+        };
+        img.src = currentThumbnailUrl;
+    }
+}
+
+// Set active quality button
+function setActiveQualityButton(quality) {
+    qualityButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.quality === quality) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+// Extract thumbnail handler
+extractBtn.addEventListener('click', () => {
+    const inputValue = youtubeUrlInput.value;
+
+    if (!inputValue.trim()) {
+        showError('Please enter a YouTube URL or Video ID');
+        hideResultSection();
+        return;
     }
 
-    const videoID = extractVideoID(url);
-    if (!videoID) {
-      errorDiv.textContent = '❌ कृपया सही YouTube वीडियो लिंक डालें।';
-      errorDiv.classList.remove('hidden');
-      preview.classList.add('hidden');
-      return;
+    const videoId = extractVideoId(inputValue);
+
+    if (!videoId) {
+        showError('Invalid YouTube URL or Video ID. Please check and try again.');
+        hideResultSection();
+        return;
     }
 
-    showThumbnail(videoID);
-  }
+    currentVideoId = videoId;
+    selectedQuality = 'maxresdefault';
+    setActiveQualityButton(selectedQuality);
+    updateThumbnailPreview();
+    showResultSection();
+});
 
-  fetchBtn.addEventListener('click', handleFetch);
-  videoUrlInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleFetch();
-  });
+// Quality button handlers
+qualityButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        selectedQuality = btn.dataset.quality;
+        setActiveQualityButton(selectedQuality);
+        updateThumbnailPreview();
+    });
+});
 
-  // Preload a default thumbnail for demo (optional)
-  // comment out if not needed
-  // setTimeout(() => {
-  //   videoUrlInput.value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-  //   handleFetch();
-  // }, 1000);
+// Download thumbnail handler
+downloadBtn.addEventListener('click', () => {
+    if (!currentThumbnailUrl) {
+        showError('No thumbnail to download');
+        return;
+    }
+
+    // Create an anchor element and trigger download
+    const link = document.createElement('a');
+    link.href = currentThumbnailUrl;
+    link.download = `youtube_thumbnail_${currentVideoId}_${selectedQuality}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showSuccess('✓ Thumbnail downloaded successfully!');
+});
+
+// Copy URL handler
+copyBtn.addEventListener('click', () => {
+    if (!currentThumbnailUrl) {
+        showError('No thumbnail URL to copy');
+        return;
+    }
+
+    navigator.clipboard.writeText(currentThumbnailUrl).then(() => {
+        showSuccess('✓ Image URL copied to clipboard!');
+    }).catch(err => {
+        showError('Failed to copy URL to clipboard');
+    });
+});
+
+// Allow Enter key to trigger extract
+youtubeUrlInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        extractBtn.click();
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    hideResultSection();
+    setActiveQualityButton(selectedQuality);
 });
