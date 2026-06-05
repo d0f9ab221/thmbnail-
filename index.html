@@ -1,1 +1,86 @@
-<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>YouTube थंबनेल डाउनलोडर</title><link rel="stylesheet" href="styles.css"></head><body><div class="container"><header><h1>🎬 YouTube थंबनेल डाउनलोडर</h1><p>कोई भी YouTube वीडियो का थंबनेल मुफ्त डाउनलोड करें</p></header><main><div class="input-group"><input type="text" id="videoUrl" placeholder="YouTube वीडियो का लिंक डालें..."><button id="fetchBtn">थंबनेल लाएं</button></div><div id="preview" class="hidden"><img id="thumbnailImg" alt="थंबनेल"><div class="actions"><a id="downloadLink" download="thumbnail.jpg"><button id="downloadBtn">⬇️ डाउनलोड करें</button></a></div></div><div id="error" class="hidden"><p>❌ कृपया सही YouTube वीडियो लिंक डालें।</p></div></main><footer><p>थंबनेल स्रोत: YouTube</p></footer></div><script src="script.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Thumbnail Downloader</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 YouTube Thumbnail Downloader</h1>
+            <p>Extract and download YouTube video thumbnails in high quality</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="youtubeUrl" 
+                    placeholder="Paste YouTube URL here (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)"
+                    class="url-input"
+                >
+                <button id="extractBtn" class="btn btn-primary">Extract Thumbnail</button>
+            </div>
+            <div class="url-formats">
+                <p><strong>Supported formats:</strong></p>
+                <ul>
+                    <li>https://www.youtube.com/watch?v=VIDEO_ID</li>
+                    <li>https://youtu.be/VIDEO_ID</li>
+                    <li>VIDEO_ID (direct)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="resultSection" class="result-section hidden">
+            <div class="quality-selector">
+                <h3>Select Thumbnail Quality:</h3>
+                <div class="quality-buttons">
+                    <button class="quality-btn" data-quality="maxresdefault" data-label="Maximum (1280x720)">
+                        Maximum
+                    </button>
+                    <button class="quality-btn" data-quality="sddefault" data-label="High (640x480)">
+                        High
+                    </button>
+                    <button class="quality-btn" data-quality="hqdefault" data-label="Medium (480x360)">
+                        Medium
+                    </button>
+                    <button class="quality-btn" data-quality="mqdefault" data-label="Low (320x180)">
+                        Low
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h3>Preview:</h3>
+                <img id="thumbnailPreview" src="" alt="Thumbnail Preview" class="thumbnail-preview">
+            </div>
+
+            <div class="button-group">
+                <button id="downloadBtn" class="btn btn-success">⬇️ Download Thumbnail</button>
+                <button id="copyBtn" class="btn btn-secondary">📋 Copy Image URL</button>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message hidden"></div>
+        <div id="successMessage" class="success-message hidden"></div>
+
+        <div class="info-section">
+            <h3>ℹ️ How to use:</h3>
+            <ol>
+                <li>Paste a YouTube URL or video ID</li>
+                <li>Click "Extract Thumbnail"</li>
+                <li>Select your desired quality</li>
+                <li>Click "Download" or "Copy URL"</li>
+            </ol>
+        </div>
+
+        <footer>
+            <p>Made with ❤️ | YouTube Thumbnail Downloader v1.0</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
